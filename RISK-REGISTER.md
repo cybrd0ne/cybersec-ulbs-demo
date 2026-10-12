@@ -22,6 +22,7 @@ Verified must point to something a reviewer can open in the clone.
 | R-03 | Internal | Logstash enrichment pipeline | Malformed log input breaks normalisation, detections go blind | — | 3 | 4 | 12 (Medium) | pytest suite with positive and negative samples, run in CI on every pull request | 1 | 4 | 4 (Low) | `tests/test_sigma_dns_txt.py`; `tests/samples/`; `.github/workflows/ci.yml` | Verified |
 | R-04 | External | Host telemetry | Traffic from known-malicious IPs goes unflagged | T1071 | 4 | 4 | 16 (High) | MISP feed to translate filter, telemetry tagged `threat.indicator.matched` and risk-scored | 2 | 3 | 6 (Low) | `scripts/misp_pull.py`; `pipelines/suricata.conf`; `docs/evidence/` | Verified |
 | R-05 | External | Public-facing nginx front door | Exposed service version indexed by Shodan | T1595.002 | 3 | 3 | 9 (Medium) | Weekly Shodan query on own IP, alert on a new open port or banner | 1 | 3 | 3 (Low) | `scripts/exposure_check.py`; `monitoring/alerts.yml` | Implemented |
+| R-06 | External | CI pipeline and its tokens (`packages: write`, `id-token: write`, model API key) | Third-party action tag hijacked to credential-stealing code (CVE-2026-33634, trivy-action, March 2026) | T1195.002 | 3 | 5 | 15 (High) | Every action pinned to a full commit SHA; Semgrep blocks mutable tags; Dependabot alerts; base image pinned by digest and gated by Trivy | 1 | 5 | 5 (Low) | `.github/workflows/ci.yml`; `.github/workflows/review.yml`; `.github/dependabot.yml`; `nginx/Dockerfile`; `docs/ci.md` | Implemented |
 
 ## How each control lands in the repository
 
@@ -48,6 +49,14 @@ untouched. That difference is the evidence that enrichment changes an outcome.
 **R-05** is closed by querying Shodan for the stack's own public IP and alerting when a
 new port or banner appears. `scripts/exposure_check.py` produces the daily diff and the
 Alertmanager rule in `monitoring/alerts.yml` carries the alert.
+
+**R-06** was added after the register's own lint gate caught it. Semgrep flagged every
+action referenced by a tag, and Dependabot flagged `trivy-action` under CVE-2026-33634:
+in March 2026 attackers force-pushed 76 of its 77 version tags to code that stole CI
+secrets. A tag is a pointer anyone with write access can move; a commit SHA is not. Every
+action is now pinned by SHA, and the Trivy gate also forced the front door onto a patched
+nginx base. The pipeline holds a token that can publish and sign images in our name, so
+impact stays at 5 even after the control.
 
 ## Scales
 

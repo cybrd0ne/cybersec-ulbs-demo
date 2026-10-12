@@ -5,7 +5,7 @@ clones the repo for evaluation. The `v1.0` tag is the reference state.
 
 ## Read in this order
 
-1. `RISK-REGISTER.md` — the five rows every control answers. Start here; the rest of the
+1. `RISK-REGISTER.md` — the six rows every control answers. Start here; the rest of the
    repository is this register implemented.
 2. `README.md` — scope, architecture, and the map of which folder serves which graded item.
 3. `CLAUDE.md`, `.claude/memory/`, `.claude/skills/` — the AI configuration that drives the
