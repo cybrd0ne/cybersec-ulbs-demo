@@ -1,0 +1,11 @@
+# Minimal routing for the demo. Replace the null receiver with email, Slack, or a
+# webhook for a real deployment.
+route:
+  receiver: 'null'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+
+receivers:
+  - name: 'null'

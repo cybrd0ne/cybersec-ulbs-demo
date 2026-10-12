@@ -1,0 +1,20 @@
+# Alert rules for the security stack. The runbook link points at a file in the repo, so
+# the alert and its response ship together.
+groups:
+  - name: security-stack
+    rules:
+      - alert: OpenSearchClusterRed
+        expr: elasticsearch_cluster_health_status{color="red"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OpenSearch cluster is red"
+          runbook: "docs/runbooks/opensearch-red.md"
+      - alert: LogstashQueueGrowing
+        expr: increase(logstash_queue_events[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Logstash queue growing, downstream likely stalled"

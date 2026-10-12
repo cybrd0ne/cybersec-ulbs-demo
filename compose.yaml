@@ -51,6 +51,46 @@ services:
     depends_on: [opensearch]
     networks: [secops]
 
+  elasticsearch-exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter@sha256:4786d49bef9ec045c155d5544abc420e6f58394170db7b6a05c5e7a5f15fb9ed
+    command:
+      - '--es.uri=https://admin:${OPENSEARCH_INITIAL_ADMIN_PASSWORD}@opensearch:9200'
+      - '--es.ssl-skip-verify'
+      - '--es.cluster_settings'
+    depends_on: [opensearch]
+    networks: [secops]
+
+  prometheus:
+    image: prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    depends_on: [elasticsearch-exporter]
+    networks: [secops]
+
+  alertmanager:
+    image: prom/alertmanager@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "${ALERTMANAGER_PORT}:9093"
+    networks: [secops]
+
+  grafana:
+    image: grafana/grafana@sha256:408afb9726de5122b00a2576763a8a57a3c86d5b0eff5305bc994ceb3eb96c3f
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    depends_on: [prometheus]
+    networks: [secops]
+
 volumes:
   os-data:
 
