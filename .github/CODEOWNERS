@@ -1,0 +1,4 @@
+# Every change requires review from the repository owner.
+# On a team repository this gives CODEOWNERS review; on a solo repository it
+# documents ownership and pairs with the governance workflow (R-01).
+* @cybrd0ne
