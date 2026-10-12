@@ -1,5 +1,5 @@
 # Test and detection-tooling dependencies. Installed in the CI test job and by `make test`.
 pytest==9.0.3
-pyyaml==6.0.2
+pyyaml==6.0.3
 pymisp==2.4.197
 shodan==1.31.0
