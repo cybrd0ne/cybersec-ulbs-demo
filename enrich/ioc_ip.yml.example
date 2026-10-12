@@ -1,0 +1,7 @@
+# Example indicator dictionary for the Logstash translate filter.
+# scripts/misp_pull.py overwrites enrich/ioc_ip.yml with live MISP indicators.
+# For an offline demo: cp enrich/ioc_ip.yml.example enrich/ioc_ip.yml
+# The real file is gitignored (R-04); each operator generates their own.
+# Values use documentation ranges (RFC 5737), never a real third-party IP.
+"203.0.113.66": "misp:1:Network activity"
+"198.51.100.23": "misp:2:Network activity"

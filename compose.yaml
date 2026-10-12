@@ -47,6 +47,7 @@ services:
     volumes:
       - ./pipelines/suricata.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - ./tests/samples/eve.json:/data/eve.json:ro
+      - ./enrich:/enrich:ro
     depends_on: [opensearch]
     networks: [secops]
 
