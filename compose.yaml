@@ -1,0 +1,47 @@
+# Self-hosted security telemetry stack.
+# Images are pinned by digest (never a floating tag). Ports come from .env.
+# Secrets come from .env.secrets, which is produced by `make secrets` from the
+# SOPS-encrypted files under secrets/ and is never committed.
+# Bring it up with `make up`, which supplies both env files.
+
+name: secops-demo
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch@sha256:72fe2fc84be8295906b8efca020b46c58ed45c8da60cd9b8b49e1991e38e89a4
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+      nofile: {soft: 65536, hard: 65536}
+    volumes:
+      - os-data:/usr/share/opensearch/data
+    ports:
+      - "${OS_HTTP_PORT}:9200"
+    networks: [secops]
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards@sha256:70fb0a6563f204f391c444329287ce7ac50dbb7b99a43307c047de1fcfb9c658
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
+    depends_on: [opensearch]
+    networks: [secops]
+
+  frontdoor:
+    build: ./nginx
+    depends_on: [opensearch-dashboards]
+    volumes:
+      - ./pki/frontdoor.crt:/etc/nginx/certs/frontdoor.crt:ro
+      - ./pki/frontdoor.key:/etc/nginx/certs/frontdoor.key:ro
+    ports:
+      - "${FRONTDOOR_HTTPS_PORT}:8443"
+    networks: [secops]
+
+volumes:
+  os-data:
+
+networks:
+  secops:
