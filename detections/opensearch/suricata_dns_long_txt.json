@@ -1,0 +1,18 @@
+{
+  "rule_id": "3f1c9a7e-5d2b-4b8e-9c1a-7e2f0d6b1a11",
+  "source": "detections/sigma/suricata_dns_long_txt.yml",
+  "converted_with": "sigma convert -t opensearch_lucene -f dsl_lucene",
+  "discover_query": "(event_type:dns AND dns.type:answer AND dns.rrtype:TXT) AND dns.rdata:/^.{200,}$/",
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "(event_type:dns AND dns.type:answer AND dns.rrtype:TXT) AND dns.rdata:/^.{200,}$/",
+            "analyze_wildcard": true
+          }
+        }
+      ]
+    }
+  }
+}

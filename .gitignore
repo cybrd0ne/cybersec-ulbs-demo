@@ -1,0 +1,21 @@
+# Decrypted secrets, produced at deploy time. Never commit.
+.env.secrets
+.env
+
+# PKI material generated at runtime. The root key must never be committed.
+pki/
+*.key
+
+# Live threat-intel indicators pulled from MISP. Each operator generates their own.
+enrich/ioc_ip.yml
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Local tool output
+*.log
+# but keep the Zeek sample log that is part of the test corpus
+!tests/samples/conn.log

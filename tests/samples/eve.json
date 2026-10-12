@@ -1,0 +1,3 @@
+{"timestamp":"2026-10-12T10:00:00.000000+0000","event_type":"dns","src_ip":"10.0.0.5","dest_ip":"192.168.1.20","proto":"UDP","dns":{"type":"answer","rrtype":"TXT","rrname":"exfil.badactor.example","rdata":"v=exfilTWFsaWNpb3VzQzJiZWFjb25FeGZpbHRyYXRpb25QYXlsb2FkU2VnbWVudE9uZVR3b1RocmVlRm91ckZpdmVTaXhTZXZlbkVpZ2h0TmluZVRlbkVsZXZlblR3ZWx2ZVRoaXJ0ZWVuRm91cnRlZW5GaWZ0ZWVuU2l4dGVlblNldmVudGVlbkVpZ2h0ZWVuTmluZXRlZW5Ud2VudHlFbmRPZkNodW5r"}}
+{"timestamp":"2026-10-12T10:00:01.000000+0000","event_type":"flow","src_ip":"192.168.1.20","dest_ip":"203.0.113.66","proto":"TCP"}
+{"timestamp":"2026-10-12T10:00:02.000000+0000","event_type":"flow","src_ip":"192.168.1.20","dest_ip":"10.0.0.5","proto":"TCP"}

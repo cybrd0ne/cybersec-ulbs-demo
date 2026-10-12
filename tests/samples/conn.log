@@ -1,0 +1,11 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	conn
+#open	2026-10-12-10-00-00
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	proto	service	duration	orig_bytes	resp_bytes	conn_state
+#types	time	string	addr	port	addr	port	enum	string	interval	count	count	string
+1760263201.000000	Cxyz01	192.168.1.20	51514	203.0.113.66	443	tcp	ssl	12.004	842	1920	SF
+1760263202.000000	Cxyz02	192.168.1.20	51515	10.0.0.5	443	tcp	ssl	0.330	410	980	SF
+#close	2026-10-12-10-05-00

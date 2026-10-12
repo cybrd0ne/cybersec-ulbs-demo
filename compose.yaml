@@ -1,0 +1,98 @@
+# Self-hosted security telemetry stack.
+# Images are pinned by digest (never a floating tag). Ports come from .env.
+# Secrets come from .env.secrets, which is produced by `make secrets` from the
+# SOPS-encrypted files under secrets/ and is never committed.
+# Bring it up with `make up`, which supplies both env files.
+
+name: secops-demo
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch@sha256:72fe2fc84be8295906b8efca020b46c58ed45c8da60cd9b8b49e1991e38e89a4
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+      nofile: {soft: 65536, hard: 65536}
+    volumes:
+      - os-data:/usr/share/opensearch/data
+    ports:
+      - "${OS_HTTP_PORT}:9200"
+    networks: [secops]
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards@sha256:70fb0a6563f204f391c444329287ce7ac50dbb7b99a43307c047de1fcfb9c658
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
+    depends_on: [opensearch]
+    networks: [secops]
+
+  frontdoor:
+    build: ./nginx
+    depends_on: [opensearch-dashboards]
+    volumes:
+      - ./pki/frontdoor.crt:/etc/nginx/certs/frontdoor.crt:ro
+      - ./pki/frontdoor.key:/etc/nginx/certs/frontdoor.key:ro
+    ports:
+      - "${FRONTDOOR_HTTPS_PORT}:8443"
+    networks: [secops]
+
+  logstash:
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin@sha256:43b0cdaf26edca812a9eafb684ae6101d8f2fd27165345737c39c04a6c7430eb
+    environment:
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    volumes:
+      - ./pipelines/suricata.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./tests/samples/eve.json:/data/eve.json:ro
+      - ./enrich:/enrich:ro
+    depends_on: [opensearch]
+    networks: [secops]
+
+  elasticsearch-exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter@sha256:4786d49bef9ec045c155d5544abc420e6f58394170db7b6a05c5e7a5f15fb9ed
+    command:
+      - '--es.uri=https://admin:${OPENSEARCH_INITIAL_ADMIN_PASSWORD}@opensearch:9200'
+      - '--es.ssl-skip-verify'
+      - '--es.cluster_settings'
+    depends_on: [opensearch]
+    networks: [secops]
+
+  prometheus:
+    image: prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    depends_on: [elasticsearch-exporter]
+    networks: [secops]
+
+  alertmanager:
+    image: prom/alertmanager@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "${ALERTMANAGER_PORT}:9093"
+    networks: [secops]
+
+  grafana:
+    image: grafana/grafana@sha256:408afb9726de5122b00a2576763a8a57a3c86d5b0eff5305bc994ceb3eb96c3f
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    depends_on: [prometheus]
+    networks: [secops]
+
+volumes:
+  os-data:
+
+networks:
+  secops:

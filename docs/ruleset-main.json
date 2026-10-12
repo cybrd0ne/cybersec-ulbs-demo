@@ -1,0 +1,40 @@
+{
+  "id": 4210001,
+  "name": "main",
+  "target": "branch",
+  "source_type": "Repository",
+  "source": "cybrd0ne/secops-demo",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/heads/main"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": true,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "require_review_thread_resolution": false
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "required_status_checks": [
+          {"context": "lint"},
+          {"context": "test"},
+          {"context": "scan"}
+        ]
+      }
+    },
+    {"type": "non_fast_forward"},
+    {"type": "deletion"}
+  ],
+  "_comment": "Exported with: gh api repos/cybrd0ne/secops-demo/rulesets/{id} > docs/ruleset-main.json. Evidence for R-01. required_approving_review_count is 0 because a solo repository cannot have an author approve their own PR; on a team repository set it to 1 and enable require_code_owner_review."
+}

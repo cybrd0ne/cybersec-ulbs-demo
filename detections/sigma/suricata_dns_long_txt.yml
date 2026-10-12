@@ -1,0 +1,23 @@
+title: Suspicious long DNS TXT response
+id: 3f1c9a7e-5d2b-4b8e-9c1a-7e2f0d6b1a11
+status: experimental
+description: DNS TXT answers over 200 bytes to a client, a common exfil or C2 carrier.
+references:
+  - https://attack.mitre.org/techniques/T1071/004/
+tags:
+  - attack.command_and_control
+  - attack.t1071.004
+logsource:
+  product: suricata
+  service: dns
+detection:
+  sel:
+    event_type: dns
+    dns.type: answer
+    dns.rrtype: TXT
+  cond_len:
+    dns.rdata|re: '^.{200,}$'
+  condition: sel and cond_len
+falsepositives:
+  - SPF and DKIM records on mail domains
+level: medium

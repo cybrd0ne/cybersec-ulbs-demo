@@ -1,0 +1,72 @@
+# Validation and supply-chain pipeline. Every job maps to a risk row (see docs/ci.md).
+# lint + test + scan run on every pull request and are required checks on main (R-01,
+# R-03). release runs only on a version tag: build, push to GHCR, SBOM, keyless sign.
+name: ci
+on:
+  pull_request:
+    branches: [main]
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  security-events: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ludeeus/action-shellcheck@2.0.0
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: nginx/Dockerfile
+      - run: pip install semgrep && semgrep scan --config p/ci --error
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements-dev.txt && pytest -q
+
+  scan:
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t frontdoor:ci nginx/
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'frontdoor:ci'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [lint, test, scan]
+    env:
+      IMG: ghcr.io/${{ github.repository }}/frontdoor:${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: '${{ github.actor }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+      - run: docker build -t "$IMG" nginx/ && docker push "$IMG"
+      - uses: anchore/sbom-action@v0
+        with:
+          image: '${{ env.IMG }}'
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - uses: sigstore/cosign-installer@v3
+      - run: cosign sign --yes "$IMG"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: sbom.spdx.json
+          generate_release_notes: true

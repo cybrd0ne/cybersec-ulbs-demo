@@ -1,0 +1,6 @@
+# SOPS binds the secrets/ path to an age recipient. Only ciphertext is committed.
+# The matching private key lives at ~/.config/sops/age/keys.txt on the machine and
+# never enters the repository (R-02).
+creation_rules:
+  - path_regex: secrets/.*\.enc\.yaml$
+    age: age10rldtak3j0ujy34fjfwpjtejtux2e52fsw0xfegvdtle4alzcveqylt25j
