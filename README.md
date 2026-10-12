@@ -13,7 +13,7 @@ increment, tagged `v0.1-session1` through `v1.0`.
 ## Scope and risk
 
 The project is defined by its risk register, not the other way round. `RISK-REGISTER.md`
-holds five rows across three registers: operational risk from the AI agent in the
+holds six rows across three registers: operational risk from the AI agent in the
 engineering loop, internal risk in the security function, and external risk from the
 threat landscape. Every control in the repository answers one row, and every pull request
 names the rows it closes.
@@ -25,6 +25,7 @@ names the rows it closes.
 | R-03 | Internal | Broken normalisation blinds detections | pytest with positive and negative samples in CI |
 | R-04 | External | Known-bad traffic goes unflagged | MISP to translate filter, telemetry tagged and scored |
 | R-05 | External | Exposed service indexed by Shodan | daily Shodan diff and alert |
+| R-06 | External | Hijacked CI action steals pipeline tokens | actions pinned by commit SHA, Semgrep gate, Trivy-gated base image |
 
 ## Architecture
 

@@ -1,6 +1,9 @@
 # Validation and supply-chain pipeline. Every job maps to a risk row (see docs/ci.md).
 # lint + test + scan run on every pull request and are required checks on main (R-01,
 # R-03). release runs only on a version tag: build, push to GHCR, SBOM, keyless sign.
+# Every action is pinned to a full commit SHA, never a tag (R-06). Tags are mutable:
+# in March 2026 attackers force-pushed 76 trivy-action tags to credential-stealing code
+# (CVE-2026-33634). The version in each trailing comment is for humans and Dependabot.
 name: ci
 on:
   pull_request:
@@ -17,9 +20,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ludeeus/action-shellcheck@2.0.0
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
+      - uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: nginx/Dockerfile
       - run: pip install semgrep && semgrep scan --config p/ci --error
@@ -27,8 +30,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.11'
       - run: pip install -r requirements-dev.txt && pytest -q
@@ -37,13 +40,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: docker build -t frontdoor:ci nginx/
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: 'frontdoor:ci'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
+          version: 'v0.70.0'
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -52,21 +56,21 @@ jobs:
     env:
       IMG: ghcr.io/${{ github.repository }}/frontdoor:${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: '${{ github.actor }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - run: docker build -t "$IMG" nginx/ && docker push "$IMG"
-      - uses: anchore/sbom-action@v0
+      - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: '${{ env.IMG }}'
           format: spdx-json
           output-file: sbom.spdx.json
-      - uses: sigstore/cosign-installer@v3
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
       - run: cosign sign --yes "$IMG"
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: sbom.spdx.json
           generate_release_notes: true

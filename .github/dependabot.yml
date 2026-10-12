@@ -1,0 +1,26 @@
+# Keep pins fresh without unpinning them (R-06). Dependabot reads the version comment
+# beside each SHA-pinned action and the tag beside the nginx digest, and opens a pull
+# request with the new SHA or digest. Every bump goes through the same CI gates.
+# The 7-day cooldown keeps brand-new releases out: the malicious Trivy 0.69.4 was live
+# for about three hours in March 2026, and a waiting period lets such releases be pulled
+# before we adopt them. Security updates for known vulnerabilities are not delayed.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+  - package-ecosystem: docker
+    directory: /nginx
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
