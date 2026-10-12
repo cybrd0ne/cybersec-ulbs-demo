@@ -1,0 +1,2 @@
+{"timestamp":"2026-10-12T09:59:00.000000+0000","event_type":"dns","src_ip":"10.0.0.5","dest_ip":"192.168.1.20","proto":"UDP","dns":{"type":"answer","rrtype":"TXT","rrname":"example.com","rdata":"v=spf1 include:_spf.example.com ~all"}}
+{"timestamp":"2026-10-12T09:59:30.000000+0000","event_type":"dns","src_ip":"10.0.0.5","dest_ip":"192.168.1.20","proto":"UDP","dns":{"type":"answer","rrtype":"A","rrname":"example.com","rdata":"93.184.216.34"}}

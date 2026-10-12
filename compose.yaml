@@ -40,6 +40,16 @@ services:
       - "${FRONTDOOR_HTTPS_PORT}:8443"
     networks: [secops]
 
+  logstash:
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin@sha256:43b0cdaf26edca812a9eafb684ae6101d8f2fd27165345737c39c04a6c7430eb
+    environment:
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    volumes:
+      - ./pipelines/suricata.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./tests/samples/eve.json:/data/eve.json:ro
+    depends_on: [opensearch]
+    networks: [secops]
+
 volumes:
   os-data:
 
