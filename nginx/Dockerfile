@@ -1,7 +1,7 @@
 # Front door image. Base pinned by digest (nginx:1.30.5-alpine), so Trivy and the build
 # see exactly what shipped. Rebuilt in CI as frontdoor:ci and scanned before merge.
 # A pinned digest does not age well: bump it when Trivy or Dependabot reports a fix.
-FROM nginx:1.31.0-alpine@sha256:2f07d83bf561b506400dc183b1b2003803e39efbd22451f848adaba14d28c7c7
+FROM nginx:1.31.6-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
 
 # Pull Alpine security fixes that landed after the base image was built. The base stays
 # pinned; only patched distro packages change, and the Trivy gate checks the result (R-06).
